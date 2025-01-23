@@ -1,29 +1,18 @@
 (in-package :cl-llm-agent)
 
-(defclass context ()
-  ((data :initform (make-hash-table :test #'equal) :accessor context-data))
-  (:documentation "Context object for storing and sharing information between agents and tools."))
+(defstruct context
+  (data (make-hash-table :test #'equal)))
 
 (defun make-context ()
-  "Creates a new context object."
-  (make-instance 'context))
+  (make-context))
 
-(defgeneric context-set (context key value)
-  (:documentation "Sets a value in the context for a given key."))
-
-(defmethod context-set ((context context) key value)
+(defun context-set (context key value)
   (setf (gethash key (context-data context)) value))
 
-(defgeneric context-get (context key)
-  (:documentation "Retrieves a value from the context for a given key."))
-
-(defmethod context-get ((context context) key)
+(defun context-get (context key)
   (gethash key (context-data context)))
 
-(defgeneric context-remove (context key)
-  (:documentation "Removes a key-value pair from the context."))
-
-(defmethod context-remove ((context context) key)
+(defun context-remove (context key)
   (remhash key (context-data context)))
 
   
@@ -41,9 +30,6 @@
     `(defclass ,agent-name ,bases  ; Place superclasses correctly
        ,@rest-body)))           ; Place the rest of the body (options and slots)
 
-(defun make-agent (agent-type &rest initargs)
-  "Creates an instance of an agent type."
-  (apply #'make-instance agent-type initargs))
 
 (defclass base-agent ()
   ((tools :initform (make-hash-table :test #'equal) :accessor agent-tools)
@@ -130,3 +116,73 @@
 
 (defmethod agent-search ((agent gemini-agent) query)
   (tavily-search query :api-key (tavily-api-key agent)))
+
+(defstruct base-agent
+  (tools (make-hash-table :test #'equal))
+  name
+  context)
+
+(defstruct (gemini-agent (:include base-agent))
+  gemini-api-key
+  tavily-api-key)
+
+(defun make-agent (agent-type &key name context gemini-api-key tavily-api-key)
+  (case agent-type
+    (gemini-agent 
+     (let ((agent (make-gemini-agent 
+                  :name name 
+                  :context (or context (make-context))
+                  :gemini-api-key gemini-api-key
+                  :tavily-api-key tavily-api-key)))
+       (setf cl-llm-agent-gemini:*gemini-api-key* gemini-api-key
+             cl-llm-agent-tavily:*tavily-api-key* tavily-api-key)
+       agent))
+    (otherwise (error "Unknown agent type: ~A" agent-type))))
+
+(defun agent-register-tool (agent tool-name)
+  (let ((tool-data (gethash tool-name cl-llm-agent-tools:*tool-registry*)))
+    (if tool-data
+        (setf (gethash tool-name (base-agent-tools agent)) tool-data)
+        (error "Tool ~A not found in global tool registry." tool-name))))
+
+(defun agent-converse (agent user-input)
+  (let* ((tool-descriptions (list-tools))
+         (tool-prompt (format nil "Available tools:~%~{~A: ~A~%~}" 
+                            (loop for tool in tool-descriptions
+                                  collect (list (getf tool :name) 
+                                              (getf tool :description)))))
+         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally." 
+                        tool-prompt user-input))
+         (llm-response (agent-llm-call agent prompt)))
+    
+    (format t "~%LLM Response: ~A~%" llm-response)
+    (handler-case
+        (let ((action-request (parse-json llm-response)))
+          (if (and (hash-table-p action-request) 
+                   (gethash "action" action-request))
+              (let ((action-name (gethash "action" action-request))
+                    (parameters (gethash "parameters" action-request)))
+                (format t "~%Tool Requested: ~A with parameters: ~A~%" 
+                        action-name parameters)
+                (let ((tool-result (execute-tool action-name 
+                                               (loop for param-name being the hash-key of parameters
+                                                     using (hash-value param-value)
+                                                     collect param-value))))
+                  (format t "~%Tool Result: ~A~%" tool-result)
+                  (format nil "Tool '~A' executed. Result: ~A" 
+                          action-name tool-result)))
+              llm-response))
+        (error (e)
+          llm-response))))
+
+(defun agent-llm-call (agent prompt)
+  (if (gemini-agent-p agent)
+      (gemini-generate-content prompt 
+                              :api-key (gemini-agent-gemini-api-key agent))
+      (error "LLM call not implemented for this agent type")))
+
+(defun agent-search (agent query)
+  (if (gemini-agent-p agent)
+      (tavily-search query 
+                     :api-key (gemini-agent-tavily-api-key agent))
+      (error "Search not implemented for this agent type")))

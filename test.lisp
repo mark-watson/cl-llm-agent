@@ -1,8 +1,5 @@
 (ql:quickload :cl-llm-agent)
 
-(setf cl-llm-agent-gemini::*gemini-api-key* (uiop:getenv "GOOGLE_API_KEY"))
-(setf cl-llm-agent-tavily::*tavily-api-key* (uiop:getenv "TAVILY_API_KEY"))
-
 ;; Create a context object
 (defvar my-context (cl-llm-agent:make-context))
 
@@ -13,11 +10,6 @@
 ;; Create a Gemini Agent and pass the context
 (defvar my-agent (cl-llm-agent:make-agent 'cl-llm-agent::gemini-agent
                                          :context my-context))
-
-;; Set the API keys (assuming there are accessor methods)
-;(setf (cl-llm-agent:agent-gemini-api-key my-agent) cl-llm-agent-gemini:*gemini-api-key*)
-;(setf (cl-llm-agent:agent-tavily-api-key my-agent) cl-llm-agent-tavily:*tavily-api-key*)
-
 
 (cl-llm-agent:agent-register-tool my-agent 'cl-llm-agent::tool-read-directory)
 (cl-llm-agent:agent-register-tool my-agent 'cl-llm-agent::tool-read-file)

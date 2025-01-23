@@ -1,6 +1,6 @@
 (in-package :cl-llm-agent-gemini)
 
-(defvar *gemini-api-key* nil
+(defvar *gemini-api-key* (uiop:getenv "GOOGLE_API_KEY")
   "Your Google Gemini API key. Set this before using Gemini functions.")
 
 (defvar *gemini-base-url* "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-flash:generateContent"

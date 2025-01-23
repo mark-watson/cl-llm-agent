@@ -1,6 +1,6 @@
 (in-package :cl-llm-agent-tavily) ;; Note: package name was initially tavily, correcting to tavily based on request
 
-(defvar *tavily-api-key* nil
+(defvar *tavily-api-key* (uiop:getenv "TAVILY_API_KEY")
   "Your Tavily Search API key. Set this before using Tavily functions.  Alternatively set TAVILY_API_KEY environment variable.")
 
 (defvar *tavily-api-url* "https://api.tavily.com/search"
