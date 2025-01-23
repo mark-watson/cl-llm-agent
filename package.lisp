@@ -12,6 +12,7 @@
 
 (defpackage :cl-llm-agent-tavily
   (:use :cl :cl-llm-agent-utils)
+  (:import-from :babel :octets-to-string)
   (:export :tavily-search
            :*tavily-api-key*
            :*tavily-api-url*))
