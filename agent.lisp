@@ -117,29 +117,6 @@
 (defmethod agent-search ((agent gemini-agent) query)
   (tavily-search query :api-key (tavily-api-key agent)))
 
-;; Remove these structure definitions
-;; (defstruct base-agent
-;;   (tools (make-hash-table :test #'equal))
-;;  name
-;;  context)
-
-;; (defstruct (gemini-agent (:include base-agent))
-;;   gemini-api-key
-;;   tavily-api-key)
-
-;; Remove this entire function as it's using the old struct-based approach
-(defun make-agent (agent-type &key name context gemini-api-key tavily-api-key)
-  (case agent-type
-    (gemini-agent 
-     (let ((agent (make-gemini-agent 
-                  :name name 
-                  :context (or context (make-context))
-                  :gemini-api-key gemini-api-key
-                  :tavily-api-key tavily-api-key)))
-       (setf cl-llm-agent-gemini:*gemini-api-key* gemini-api-key
-             cl-llm-agent-tavily:*tavily-api-key* tavily-api-key)
-       agent))
-    (otherwise (error "Unknown agent type: ~A" agent-type))))
 
 (defun agent-register-tool (agent tool-name)
   (let ((tool-data (gethash tool-name cl-llm-agent-tools:*tool-registry*)))
