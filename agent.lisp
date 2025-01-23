@@ -15,7 +15,7 @@
 (defun context-remove (context key)
   (remhash key (context-data context)))
 
-  
+
 (defvar *agent-registry* (make-hash-table :test #'equal)
   "Registry to store defined agent types.")
 
@@ -102,20 +102,14 @@
 
 (define-agent gemini-agent
   (:bases (base-agent))
-  ((gemini-api-key :initarg :gemini-api-key :accessor gemini-api-key)
-   (tavily-api-key :initarg :tavily-api-key :accessor tavily-api-key)))
-
-
-(defmethod initialize-instance :after ((agent gemini-agent) &key gemini-api-key tavily-api-key &allow-other-keys)
-  (setf cl-llm-agent-gemini:*gemini-api-key* gemini-api-key)
-  (setf cl-llm-agent-tavily:*tavily-api-key* tavily-api-key))
+  ())
 
 
 (defmethod agent-llm-call ((agent gemini-agent) prompt)
-  (gemini-generate-content prompt :api-key (gemini-api-key agent)))
+  (gemini-generate-content prompt))
 
 (defmethod agent-search ((agent gemini-agent) query)
-  (tavily-search query :api-key (tavily-api-key agent)))
+  (tavily-search query))
 
 
 (defun agent-register-tool (agent tool-name)
@@ -157,13 +151,11 @@
 ;; Update the agent-llm-call function to use CLOS
 (defun agent-llm-call (agent prompt)
   (if (typep agent 'gemini-agent)
-      (gemini-generate-content prompt 
-                              :api-key (gemini-api-key agent))
+      (gemini-generate-content prompt)
       (error "LLM call not implemented for this agent type")))
 
 ;; Update the agent-search function to use CLOS
 (defun agent-search (agent query)
   (if (typep agent 'gemini-agent)
-      (tavily-search query 
-                     :api-key (tavily-api-key agent))
+      (tavily-search query)
       (error "Search not implemented for this agent type")))
