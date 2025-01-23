@@ -102,8 +102,7 @@
 (define-agent gemini-agent
   (:bases (base-agent))
   ((gemini-api-key :initarg :gemini-api-key :accessor gemini-api-key)
-   (tavily-api-key :initarg :tavily-api-key :accessor tavily-api-key))
-  (:metaclass standard-class))
+   (tavily-api-key :initarg :tavily-api-key :accessor tavily-api-key)))
 
 
 (defmethod initialize-instance :after ((agent gemini-agent) &key gemini-api-key tavily-api-key &allow-other-keys)
@@ -117,14 +116,15 @@
 (defmethod agent-search ((agent gemini-agent) query)
   (tavily-search query :api-key (tavily-api-key agent)))
 
-(defstruct base-agent
-  (tools (make-hash-table :test #'equal))
-  name
-  context)
+;; Remove these structure definitions
+;; (defstruct base-agent
+;;   (tools (make-hash-table :test #'equal))
+;;  name
+;;  context)
 
-(defstruct (gemini-agent (:include base-agent))
-  gemini-api-key
-  tavily-api-key)
+;; (defstruct (gemini-agent (:include base-agent))
+;;   gemini-api-key
+;;   tavily-api-key)
 
 (defun make-agent (agent-type &key name context gemini-api-key tavily-api-key)
   (case agent-type
@@ -142,7 +142,7 @@
 (defun agent-register-tool (agent tool-name)
   (let ((tool-data (gethash tool-name cl-llm-agent-tools:*tool-registry*)))
     (if tool-data
-        (setf (gethash tool-name (base-agent-tools agent)) tool-data)
+        (setf (gethash tool-name (agent-tools agent)) tool-data)
         (error "Tool ~A not found in global tool registry." tool-name))))
 
 (defun agent-converse (agent user-input)
