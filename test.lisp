@@ -1,7 +1,7 @@
-(ql:quickload :cl-llm-agent)
+;;(ql:quickload :cl-llm-agent)
 
 ;; Create a context object
-(defvar my-context (cl-llm-agent:make-context))
+(defvar my-context (cl-llm-agent:create-context))
 
 ;; Set some initial data in the context
 (cl-llm-agent:context-set my-context "current-task" "researching restaurants")

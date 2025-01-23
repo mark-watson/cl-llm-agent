@@ -37,7 +37,7 @@
            :agent-search
            :*agent-registry*
            :context             ; Export context class
-           :make-context        ; Export make-context function
+           :create-context        ; Export make-context function
            :context-set         ; Export context-set generic function
            :context-get         ; Export context-get generic function
            :context-remove))    ; Export context-remove generic function

@@ -3,7 +3,7 @@
 (defstruct context
   (data (make-hash-table :test #'equal)))
 
-(defun make-context ()
+(defun create-context ()
   (make-context))
 
 (defun context-set (context key value)
