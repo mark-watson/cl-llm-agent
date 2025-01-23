@@ -42,6 +42,7 @@
   (unless (slot-boundp agent 'context)
     (setf (slot-value agent 'context) (make-context))))
 
+;; Remove or comment out the old make-agent function that uses case
 (defun make-agent (agent-type &rest initargs &key context)
   "Creates an instance of an agent type."
   (apply #'make-instance agent-type (append (list :context context) initargs)))
@@ -126,6 +127,7 @@
 ;;   gemini-api-key
 ;;   tavily-api-key)
 
+;; Remove this entire function as it's using the old struct-based approach
 (defun make-agent (agent-type &key name context gemini-api-key tavily-api-key)
   (case agent-type
     (gemini-agent 
@@ -175,14 +177,16 @@
         (error (e)
           llm-response))))
 
+;; Update the agent-llm-call function to use CLOS
 (defun agent-llm-call (agent prompt)
-  (if (gemini-agent-p agent)
+  (if (typep agent 'gemini-agent)
       (gemini-generate-content prompt 
-                              :api-key (gemini-agent-gemini-api-key agent))
+                              :api-key (gemini-api-key agent))
       (error "LLM call not implemented for this agent type")))
 
+;; Update the agent-search function to use CLOS
 (defun agent-search (agent query)
-  (if (gemini-agent-p agent)
+  (if (typep agent 'gemini-agent)
       (tavily-search query 
-                     :api-key (gemini-agent-tavily-api-key agent))
+                     :api-key (tavily-api-key agent))
       (error "Search not implemented for this agent type")))
