@@ -64,7 +64,7 @@
     (format t "~%LLM Response: ~A~%" llm-response)
 
     (handler-case
-        (let ((action-request (parse-json llm-response))) ; Try to parse as JSON tool request
+        (let ((action-request (cl-llm-agent-utils:parse-json llm-response))) ; Try to parse as JSON tool request
           (if (and (hash-table-p action-request) (gethash "action" action-request))
               (let ((action-name (gethash "action" action-request))
                     (parameters (gethash "parameters" action-request)))
@@ -157,7 +157,7 @@
     
     (format t "~%LLM Response: ~A~%" llm-response)
     (handler-case
-        (let ((action-request (parse-json llm-response)))
+        (let ((action-request (cl-llm-agent-utils:parse-json llm-response)))
           (if (and (hash-table-p action-request) 
                    (gethash "action" action-request))
               (let ((action-name (gethash "action" action-request))

@@ -28,6 +28,6 @@
                                 (error "Gemini response structure error: No parts in content.")))
                           (error "Gemini response structure error: No content in candidate.")))
                     (error "Gemini response structure error: No candidates in response."))))))
-      (error (e)
-        (error "Error communicating with Gemini API: ~A" e))))
+      (error (c)
+        (error "Error communicating with Gemini API: ~A" c))))
 

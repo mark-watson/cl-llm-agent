@@ -3,6 +3,17 @@
 (defvar *tool-registry* (make-hash-table :test #'equal)
   "Registry to store available tools.")
 
+(defun directory-pathname-p (pathname)
+  (and (pathnamep pathname)
+       (or (null (pathname-name pathname))
+           (eq (pathname-name pathname) :unspecific))
+       (or (null (pathname-type pathname))
+           (eq (pathname-type pathname) :unspecific))))
+
+(defun probe-directory (pathname)
+  (and (probe-file pathname)
+       (directory-pathname-p pathname)))
+
 (defmacro define-tool (name description parameters &body body)
   "Defines a tool with a name, description, parameters, and implementation."
   `(register-tool ',name
