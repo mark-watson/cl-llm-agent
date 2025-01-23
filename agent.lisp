@@ -1,14 +1,11 @@
 (in-package :cl-llm-agent)
 
-(defstruct context
-  (data (make-hash-table :test #'equal)))
-
 (defclass context ()
   ((data :initform (make-hash-table :test #'equal)
          :accessor context-data))
   (:documentation "Context class for storing key-value pairs"))
 
-(defun create-context ()
+(defun make-context ()
   (make-instance 'context))
 
 (defgeneric context-set (context key value)
