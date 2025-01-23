@@ -3,16 +3,30 @@
 (defstruct context
   (data (make-hash-table :test #'equal)))
 
-(defun create-context ()
-  (make-context))
+(defclass context ()
+  ((data :initform (make-hash-table :test #'equal)
+         :accessor context-data))
+  (:documentation "Context class for storing key-value pairs"))
 
-(defun context-set (context key value)
+(defun create-context ()
+  (make-instance 'context))
+
+(defgeneric context-set (context key value)
+  (:documentation "Set a value in the context"))
+
+(defmethod context-set ((context context) key value)
   (setf (gethash key (context-data context)) value))
 
-(defun context-get (context key)
+(defgeneric context-get (context key)
+  (:documentation "Get a value from the context"))
+
+(defmethod context-get ((context context) key)
   (gethash key (context-data context)))
 
-(defun context-remove (context key)
+(defgeneric context-remove (context key)
+  (:documentation "Remove a key from the context"))
+
+(defmethod context-remove ((context context) key)
   (remhash key (context-data context)))
 
 
