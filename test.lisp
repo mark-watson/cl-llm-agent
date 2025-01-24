@@ -13,6 +13,10 @@
 
 (cl-llm-agent:agent-register-tool my-agent 'cl-llm-agent::tool-read-directory)
 (cl-llm-agent:agent-register-tool my-agent 'cl-llm-agent::tool-read-file)
+(cl-llm-agent:agent-register-tool my-agent 'cl-llm-agent::tool-search-web)
+
+(cl-llm-agent:agent-converse my-agent "Search the web to find information on AI advancements.")
+
 
 ;; Agent interaction - the agent can now access and modify its context
 (cl-llm-agent:agent-converse my-agent "Find restaurants based on my current task and location stored in the context.")

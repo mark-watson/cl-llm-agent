@@ -65,13 +65,27 @@
         (setf (gethash tool-name (agent-tools agent)) tool-data)
         (error "Tool ~A not found in global tool registry." tool-name))))
 
+(defun make-prompt-string ()
+  (with-output-to-string (stream)
+    (format stream "tools:~%")
+    (dolist (tool (list-tools))
+      (format stream "  ~a: ~a~%"
+              (getf tool :name)
+              (getf tool :description)))))
+
+(defvar *tool-prompt* "Available tools:
+  TOOL-SEARCH-WEB: Search the web.
+  TOOL-READ-DIRECTORY: Reads the contents of a directory.
+  TOOL-READ-FILE: Reads the contents of a file.
+")
+
 (defmethod agent-converse ((agent base-agent) user-input)
   "Handles a conversation turn with the agent."
+  (format t "&* * agent-converse: ~A~%" user-input)
   (let* ((tool-descriptions (list-tools)) ; Get descriptions of registered tools
-         (tool-prompt (format nil "Available tools:~%~{~A: ~A~%~}" (loop for tool in tool-descriptions
-                                                                     collect (list (getf tool :name) (getf tool :description)))))
-         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally." tool-prompt user-input))
-         (llm-response (agent-llm-call agent prompt)))
+        (tool-prompt *tool-prompt*)
+        (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally." tool-prompt user-input))
+        (llm-response (agent-llm-call agent prompt)))
 
     (format t "~%LLM Response: ~A~%" llm-response)
 
@@ -122,42 +136,6 @@
 (defmethod agent-search ((agent gemini-agent) query)
   (tavily-search query))
 
-
-(defun agent-register-tool (agent tool-name)
-  (let ((tool-data (gethash tool-name cl-llm-agent-tools:*tool-registry*)))
-    (if tool-data
-        (setf (gethash tool-name (agent-tools agent)) tool-data)
-        (error "Tool ~A not found in global tool registry." tool-name))))
-
-(defun agent-converse (agent user-input)
-  (let* ((tool-descriptions (list-tools))
-         (tool-prompt (format nil "Available tools:~%~{~A: ~A~%~}" 
-                            (loop for tool in tool-descriptions
-                                  collect (list (getf tool :name) 
-                                              (getf tool :description)))))
-         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally." 
-                        tool-prompt user-input))
-         (llm-response (agent-llm-call agent prompt)))
-    
-    (format t "~%LLM Response: ~A~%" llm-response)
-    (handler-case
-        (let ((action-request (cl-llm-agent-utils:parse-json llm-response)))
-          (if (and (hash-table-p action-request) 
-                   (gethash "action" action-request))
-              (let ((action-name (gethash "action" action-request))
-                    (parameters (gethash "parameters" action-request)))
-                (format t "~%Tool Requested: ~A with parameters: ~A~%" 
-                        action-name parameters)
-                (let ((tool-result (execute-tool action-name 
-                                               (loop for param-name being the hash-key of parameters
-                                                     using (hash-value param-value)
-                                                     collect param-value))))
-                  (format t "~%Tool Result: ~A~%" tool-result)
-                  (format nil "Tool '~A' executed. Result: ~A" 
-                          action-name tool-result)))
-              llm-response))
-        (error (e)
-          llm-response))))
 
 ;; Update the agent-llm-call function to use CLOS
 (defun agent-llm-call (agent prompt)

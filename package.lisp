@@ -24,7 +24,8 @@
            :list-tools
            :*tool-registry*
            :tool-read-directory
-           :tool-read-file))
+           :tool-read-file
+           :tool-search-web))
 
 (defpackage :cl-llm-agent
   (:use :cl :cl-llm-agent-gemini :cl-llm-agent-tavily :cl-llm-agent-tools)

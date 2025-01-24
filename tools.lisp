@@ -70,3 +70,7 @@
                   collect line)))
         (format nil "File not found: ~A" file-path))))
 
+(define-tool tool-search-web "Search the web."
+  (query)
+  "query: web search query."
+  (cl-llm-agent-tavily:tavily-search query))
