@@ -37,9 +37,6 @@
   (remhash key (context-data context)))
 
 
-(defvar *agent-registry* (make-hash-table :test #'equal)
-  "Registry to store defined agent types.")
-
 (defmacro define-agent (agent-name &body body)
   "Defines a new agent type."
   (let ((bases nil)
@@ -68,13 +65,6 @@
   "Creates an instance of an agent type."
   (apply #'make-instance agent-type (append (list :context context) initargs)))
 
-(defmethod agent-register-tool ((agent base-agent) tool-name)
-  "Registers a tool with the agent."
-  (let ((tool-data (gethash tool-name cl-llm-agent-tools:*tool-registry*)))
-    (if tool-data
-        (setf (gethash tool-name (agent-tools agent)) tool-data)
-        (error "Tool ~A not found in global tool registry." tool-name))))
-
 (defun make-prompt-string ()
   (with-output-to-string (stream)
     (format stream "tools:~%")
@@ -82,13 +72,6 @@
       (format stream "  ~a: ~a~%"
               (getf tool :name)
               (getf tool :description)))))
-
-(defvar *XXXXtool-prompt* "Available tools:
-  TOOL-SEARCH-WEB: Search the web.
-  TOOL-READ-DIRECTORY: Reads the contents of a directory.
-  TOOL-READ-FILE: Reads the contents of a file.
-")
-
 
 (defun remove-json-markdown (text)
   "Removes common markdown formatting from a JSON string."
@@ -138,17 +121,10 @@
                   ))))
 
         (error (e)
-          ;; Not a JSON tool request, treat as natural language response
-           ;;(format t "ERROR from agent-converse: ~A~%" e)
-            ;;(format nil "Agent response: ~A" cleaned-response)
+          ;; Not a JSON tool request, treat as natural language response and ignore JSON parsing error
+          (print e)
           ))))
 
-
-(defun safe-funcall (func-symbol &rest args)
-    (let ((func (fdefinition func-symbol)))
-        (if func
-            (apply func args)
-            (format t "Error: ~A does not name a function.~%" func-symbol))))
 
 (defun get-tool-function (tool-name)
   "Retrieves the function associated with a given tool name."
@@ -161,12 +137,12 @@
 (defun execute-tool (tool-name parameters)
   "Example of tool execution. Replace with actual tool logic."
   (format t "~%Executing tool ~A with params ~A~%" tool-name parameters)
-  (print (get-tool-function tool-name))
   (let ((tool-function (get-tool-function tool-name)))
+    (format t "  tool-function: ~A~%" tool-function)
     (if tool-function
         (let()
-          (format t "Found tool function, calling it...~%")
-          (apply tool-function parameters))
+          (format t "~%Found tool function, calling it...parameters = ~A~%" parameters)
+          (princ (apply tool-function parameters)))
       (format nil "Unknown tool: ~A" tool-name))))
 
 
@@ -182,8 +158,3 @@
       (gemini-generate-content prompt)
       (error "LLM call not implemented for this agent type")))
 
-;; Update the agent-search function to use CLOS
-(defun agent-search (agent query)
-  (if (typep agent 'gemini-agent)
-      (tavily-search query)
-      (error "Search not implemented for this agent type")))

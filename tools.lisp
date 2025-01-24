@@ -29,6 +29,7 @@
 
 (defun execute-tool (tool-name arguments)
   "Executes a registered tool with the given arguments."
+  (format t "* tools.lisp: execute-tool ~A~%" tool-name)
   (let ((tool-data (gethash tool-name *tool-registry*)))
     (if tool-data
         (let ((tool-function (getf tool-data :function))
@@ -51,26 +52,41 @@
 
 ;; --- Predefined Tools ---
 
+(defun helper-tool-read-directory (directory-path)
+  (format t "* helper-tool-read-directory ~A~%" dir-path)
+  (let ((dir-path (namestring (truename directory-path)))) ; Ensure absolute path
+    (if (probe-directory dir-path)
+        (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
+      (format nil "Directory not found: ~A" directory-path))))
+
 (define-tool "tool-read-directory" "Reads the contents of a directory."
   (directory-path)
   "directory-path (string): The path to the directory."
   (lambda (directory-path)
-    (let ((dir-path (namestring (truename directory-path)))) ; Ensure absolute path
-      (if (probe-directory dir-path)
-          (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
-        (format nil "Directory not found: ~A" directory-path)))))
+    (format t "* tool-read-directory ~A~%" dir-path)
+    (helper-tool-read-directory directory-path)))
+
+
+(defun helper-tool-read-file (directory-path)
+  (let ((dir-path (or directory-path ".")))
+    (format t "* helper-tool-read-file in directory ~A~%" dir-path)
+    (let ((dir-path-s (namestring (truename dir-path))))
+      (format t "    dir-path = ~A~%" dir-path-s)
+      (if (probe-directory dir-path-s)
+          (mapcar #'namestring (directory (concatenate 'string dir-path-s "/*.*")))
+        (format nil "Directory not found: ~A" dir-path-s)))))
 
 (define-tool "tool-read-file" "Reads the contents of a file."
   (file-path)
   "file-path (string): The path to the file."
   (lambda (directory-path)
-    (let ((dir-path (namestring (truename directory-path))))
-      (if (probe-directory dir-path)
-          (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
-        (format nil "Directory not found: ~A" directory-path)))))
+    (format t "* tool-read-file in directory ~A~%" dir-path)
+    (helper-tool-read-file directory-path)))
+
 
 (define-tool "tool-search-web" "Search the web."
   (query)
   "query: web search query."
   (lambda (query)
+    (format t "* tool-search-web query: ~A~%" query)
     (cl-llm-agent-tavily:tavily-search query)))
