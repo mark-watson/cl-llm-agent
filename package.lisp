@@ -41,5 +41,7 @@
            :make-context        ; Export make-context function
            ;;:context-set         ; Export context-set generic function
            :context-data         ; Export context-get generic function
-           :context-remove))    ; Export context-remove generic function
+           :context-remove
+           :display-context
+           :agent-context))    ; Export context-remove generic function
 

@@ -36,6 +36,16 @@
 (defmethod context-remove ((context context) key)
   (remhash key (context-data context)))
 
+(defun display-context (context &optional (message "Context contents:"))
+  "Pretty prints the contents of a context object."
+  (format t "~A~%" message)
+  (let ((data (context-data context)))
+    (if (hash-table-p data)
+        (loop for key being the hash-key of data
+              using (hash-value value)
+              do (format t "  ~A: ~A~%" key value))
+        (format t "  Invalid context object~%"))))
+
 
 (defmacro define-agent (agent-name &body body)
   "Defines a new agent type."
@@ -85,6 +95,9 @@
 (defmethod agent-converse ((agent base-agent) user-input)
   "Handles a conversation turn with the agent."
   (format t "&* * agent-converse: ~A~%" user-input)
+  ;; for debug, print out the agent's current context:
+  (display-context (cl-llm-agent:agent-context agent) "Context at start of agent-converse call")
+
   (let* ((tool-descriptions (list-tools))
          (tool-prompt (make-prompt-string))
          (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond ONLY in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally. Do not include markdown formatting for JSON output! An example of JSON output: {\"action\": \"search_restaurant\", \"parameters\": {\"cuisine\": \"Italian\", \"location\": \"London\"}}.  If you require more information, then respond naturally" tool-prompt user-input))

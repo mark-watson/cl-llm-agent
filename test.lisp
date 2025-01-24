@@ -10,6 +10,10 @@
 ;; Create a Gemini Agent and pass the context
 (defvar my-agent (cl-llm-agent:make-agent 'cl-llm-agent::gemini-agent
                                           :context my-context))
+;; try extracting context from agent
+(defvar *context* (cl-llm-agent:agent-context my-agent))
+(cl-llm-agent:display-context *context* "Context fetched from agent")
+(cl-llm-agent:display-context my-context "Original context")
 
 ;(cl-llm-agent:agent-converse my-agent "Search the web to find information on AI advancements.")
 
