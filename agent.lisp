@@ -139,8 +139,8 @@
 
         (error (e)
           ;; Not a JSON tool request, treat as natural language response
-           (format t "ERROR from agent-converse: ~A~%" e)
-            (format nil "Agent response: ~A" cleaned-response)
+           ;;(format t "ERROR from agent-converse: ~A~%" e)
+            ;;(format nil "Agent response: ~A" cleaned-response)
           ))))
 
 
@@ -150,17 +150,24 @@
             (apply func args)
             (format t "Error: ~A does not name a function.~%" func-symbol))))
 
+(defun get-tool-function (tool-name)
+  "Retrieves the function associated with a given tool name."
+  (let ((tool-entry (find tool-name (cl-llm-agent::list-tools) :key (lambda (entry) (getf entry :name)) :test #'string=)))
+    (if tool-entry
+        (getf tool-entry :function)
+        nil)))
+
 ;; Example execute-tool
 (defun execute-tool (tool-name parameters)
   "Example of tool execution. Replace with actual tool logic."
   (format t "~%Executing tool ~A with params ~A~%" tool-name parameters)
-  (cond
-    ((equal tool-name 'TOOL-SEARCH-WEB)
-        (format t "~%Performing Web search for ~A~%" (first parameters))
-        (format nil "Search results for: ~A" (first parameters)) )
-    (t
-      (format nil "Unknown tool: ~A" tool-name)
-    )))
+  (print (get-tool-function tool-name))
+  (let ((tool-function (get-tool-function tool-name)))
+    (if tool-function
+        (let()
+          (format t "Found tool function, calling it...~%")
+          (apply tool-function parameters))
+      (format nil "Unknown tool: ~A" tool-name))))
 
 
 ;; --- Concrete Agent Example using Gemini and tavily ---

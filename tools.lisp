@@ -16,7 +16,7 @@
 
 (defmacro define-tool (name description parameters parameter-example a-function)
   "Defines a tool with a name, description, parameters, and implementation."
-  `(register-tool ',name
+  `(register-tool ,name
                   :description ,description
                   :parameters ',parameters
                   :parameter-example ,parameter-example
@@ -51,7 +51,7 @@
 
 ;; --- Predefined Tools ---
 
-(define-tool tool-read-directory "Reads the contents of a directory."
+(define-tool "tool-read-directory" "Reads the contents of a directory."
   (directory-path)
   "directory-path (string): The path to the directory."
   (lambda (directory-path)
@@ -60,7 +60,7 @@
           (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
         (format nil "Directory not found: ~A" directory-path)))))
 
-(define-tool tool-read-file "Reads the contents of a file."
+(define-tool "tool-read-file" "Reads the contents of a file."
   (file-path)
   "file-path (string): The path to the file."
   (lambda (directory-path)
@@ -69,7 +69,7 @@
           (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
         (format nil "Directory not found: ~A" directory-path)))))
 
-(define-tool tool-search-web "Search the web."
+(define-tool "tool-search-web" "Search the web."
   (query)
   "query: web search query."
   (lambda (query)

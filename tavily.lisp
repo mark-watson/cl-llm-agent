@@ -26,6 +26,7 @@
 
 (defun tavily-search (query &key (api-key *tavily-api-key*))
   "Performs a search using the Tavily Search API, rewritten from Racket."
+  (format t "~%* Calling tavily-search with qery: ~A~%" query)
   (let* ((api-key-to-use (or api-key (uiop:getenv "TAVILY_API_KEY"))) ; Get API key, prioritize arg then env
          (api-url *tavily-api-url*)
          (prompt-data (make-tavily-json-payload query)))
