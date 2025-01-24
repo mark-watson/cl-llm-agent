@@ -39,7 +39,7 @@
             rest-body (rest body)))     ; Remove :bases form from body
 
     `(defclass ,agent-name ,bases  ; Place superclasses correctly
-       ,@rest-body)))           ; Place the rest of the body (options and slots)
+      ,@rest-body)))           ; Place the rest of the body (options and slots)
 
 
 (defclass base-agent ()
@@ -83,9 +83,9 @@
   "Handles a conversation turn with the agent."
   (format t "&* * agent-converse: ~A~%" user-input)
   (let* ((tool-descriptions (list-tools)) ; Get descriptions of registered tools
-        (tool-prompt *tool-prompt*)
-        (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally." tool-prompt user-input))
-        (llm-response (agent-llm-call agent prompt)))
+         (tool-prompt (make-prompt-string)) ;; *tool-prompt*)
+         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally. Do not include markdown formatting for JSON output!" tool-prompt user-input))
+         (llm-response (agent-llm-call agent prompt)))
 
     (format t "~%LLM Response: ~A~%" llm-response)
 
@@ -95,9 +95,11 @@
               (let ((action-name (gethash "action" action-request))
                     (parameters (gethash "parameters" action-request)))
                 (format t "~%Tool Requested: ~A with parameters: ~A~%" action-name parameters)
-                (let ((tool-result (execute-tool action-name (loop for param-name being the hash-key of parameters
-                                                                   using (hash-value param-value)
-                                                                   collect param-value)))) ; Order of parameters might be important - improve this
+                (let ((tool-result
+                        (execute-tool action-name
+                          (loop for param-name being the hash-key of parameters
+                                                                  using (hash-value param-value)
+                                                                  collect param-value)))) ; Order of parameters might be important - improve this
                   (format t "~%Tool Result: ~A~%" tool-result)
                   ;; Optionally feed tool result back to LLM for next turn
                   (format nil "Tool '~A' executed. Result: ~A" action-name tool-result) ; For simple return, can be improved with feedback loop
@@ -109,33 +111,11 @@
           llm-response))))
 
 
-(defgeneric agent-llm-call (agent prompt)
-  (:documentation "Abstract method for making LLM calls. Needs to be specialized for specific LLMs."))
-
-(defmethod agent-llm-call ((agent base-agent) prompt)
-  (error "agent-llm-call not implemented for base-agent. Subclass base-agent and implement this method."))
-
-
-(defgeneric agent-search (agent query)
-  (:documentation "Abstract method for performing search. Needs to be specialized for specific search APIs."))
-
-(defmethod agent-search ((agent base-agent) query)
-  (error "agent-search not implemented for base-agent. Subclass base-agent and implement this method."))
-
-
 ;; --- Concrete Agent Example using Gemini and tavily ---
 
 (define-agent gemini-agent
   (:bases (base-agent))
   ())
-
-
-(defmethod agent-llm-call ((agent gemini-agent) prompt)
-  (gemini-generate-content prompt))
-
-(defmethod agent-search ((agent gemini-agent) query)
-  (tavily-search query))
-
 
 ;; Update the agent-llm-call function to use CLOS
 (defun agent-llm-call (agent prompt)
