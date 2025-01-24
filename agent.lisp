@@ -94,7 +94,7 @@
     (format t "~%LLM Response: ~A~%" llm-response)
     (format t "~%Cleaned LLM Response: ~A~%" cleaned-response)
 
-    (handler-case
+    ;;(handler-case
         (let ((action-request (cl-llm-agent-utils:parse-json cleaned-response)))
           (format t "* agent-converse: action-request = ~A~%" action-request)
          (if (listp action-request)
@@ -120,10 +120,11 @@
                   (format nil "Agent response: ~A" cleaned-response)  ;; Return original response
                   ))))
 
-        (error (e)
-          ;; Not a JSON tool request, treat as natural language response and ignore JSON parsing error
-          (print e)
-          ))))
+    ))
+        ;;(error (e)
+        ;;  ;; Not a JSON tool request, treat as natural language response and ignore JSON parsing error
+        ;;  (print e)
+       ;;   ))))
 
 
 (defun get-tool-function (tool-name)
