@@ -1,5 +1,15 @@
 (in-package :cl-llm-agent)
 
+(defun pp-hash (message h)
+  "Prints a message followed by the contents of a hash table."
+  (format t "~A~%" message)
+  (when (hash-table-p h)
+    (loop for key being the hash-key of h
+          using (hash-value value)
+          do (format t "  ~A: ~A~%" key value)))
+  (unless (hash-table-p h)
+    (format t "  Not a hash table: ~A~%" h)))
+
 (defclass context ()
   ((data :initform (make-hash-table :test #'equal)
          :accessor context-data))
@@ -73,42 +83,84 @@
               (getf tool :name)
               (getf tool :description)))))
 
-(defvar *tool-prompt* "Available tools:
+(defvar *XXXXtool-prompt* "Available tools:
   TOOL-SEARCH-WEB: Search the web.
   TOOL-READ-DIRECTORY: Reads the contents of a directory.
   TOOL-READ-FILE: Reads the contents of a file.
 ")
 
+
+(defun remove-json-markdown (text)
+  "Removes common markdown formatting from a JSON string."
+  (let* ((trimmed-text (string-trim '(#\Space #\Newline #\Return #\Tab) text))
+         (start-pos (position #\{ trimmed-text))
+         (end-pos   (position #\} trimmed-text :from-end t)))
+    (if (and start-pos end-pos (< start-pos end-pos))
+        (subseq trimmed-text start-pos (1+ end-pos))
+        text))) ;; Return original if no JSON found.
+
 (defmethod agent-converse ((agent base-agent) user-input)
   "Handles a conversation turn with the agent."
   (format t "&* * agent-converse: ~A~%" user-input)
-  (let* ((tool-descriptions (list-tools)) ; Get descriptions of registered tools
-         (tool-prompt (make-prompt-string)) ;; *tool-prompt*)
-         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally. Do not include markdown formatting for JSON output!" tool-prompt user-input))
-         (llm-response (agent-llm-call agent prompt)))
+  (let* ((tool-descriptions (list-tools))
+         (tool-prompt (make-prompt-string))
+         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond ONLY in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally. Do not include markdown formatting for JSON output! An example of JSON output: {\"action\": \"search_restaurant\", \"parameters\": {\"cuisine\": \"Italian\", \"location\": \"London\"}}.  If you require more information, then respond naturally" tool-prompt user-input))
+         (llm-response (agent-llm-call agent prompt))
+         (cleaned-response (remove-json-markdown llm-response)))
 
     (format t "~%LLM Response: ~A~%" llm-response)
+    (format t "~%Cleaned LLM Response: ~A~%" cleaned-response)
 
     (handler-case
-        (let ((action-request (cl-llm-agent-utils:parse-json llm-response))) ; Try to parse as JSON tool request
-          (if (and (hash-table-p action-request) (gethash "action" action-request))
-              (let ((action-name (gethash "action" action-request))
-                    (parameters (gethash "parameters" action-request)))
-                (format t "~%Tool Requested: ~A with parameters: ~A~%" action-name parameters)
-                (let ((tool-result
-                        (execute-tool action-name
-                          (loop for param-name being the hash-key of parameters
-                                                                  using (hash-value param-value)
-                                                                  collect param-value)))) ; Order of parameters might be important - improve this
-                  (format t "~%Tool Result: ~A~%" tool-result)
-                  ;; Optionally feed tool result back to LLM for next turn
-                  (format nil "Tool '~A' executed. Result: ~A" action-name tool-result) ; For simple return, can be improved with feedback loop
-                  ))
-              ;; No tool requested, return LLM response directly
-              llm-response))
+        (let ((action-request (cl-llm-agent-utils:parse-json cleaned-response)))
+          (format t "* agent-converse: action-request = ~A~%" action-request)
+         (if (listp action-request)
+              (let ((action-name (cdr (assoc :ACTION action-request :test #'equal)))
+                    (parameters (cdr (assoc :PARAMETERS action-request :test #'equal))))
+                (if (listp parameters)
+                    (let ((h (make-hash-table :test #'equal)))
+                      (dolist (p parameters)
+                        (setf (gethash (symbol-name (car p)) h) (cdr p)))
+                      (pp-hash "* function call params" h)
+                      (format t "~%Tool Requested: ~A with parameters hashtable: ~S~%" action-name h)
+                      (let ((tool-result
+                             (execute-tool action-name
+                                           (if (listp parameters)
+                                               (loop for (param-name . param-value) in parameters
+                                                     collect param-value)
+                                             (list parameters))))) ; If parameters are a list of pairs, get the values, otherwise, treat parameters as a single value
+                        (format t "~%Tool Result: ~A~%" tool-result)
+                        (format nil "Tool '~A' executed. Result: ~A" action-name tool-result)
+                        ))
+
+                  ;; No tool requested, return LLM response directly
+                  (format nil "Agent response: ~A" cleaned-response)  ;; Return original response
+                  ))))
+
         (error (e)
           ;; Not a JSON tool request, treat as natural language response
-          llm-response))))
+           (format t "ERROR from agent-converse: ~A~%" e)
+            (format nil "Agent response: ~A" cleaned-response)
+          ))))
+
+
+(defun safe-funcall (func-symbol &rest args)
+    (let ((func (fdefinition func-symbol)))
+        (if func
+            (apply func args)
+            (format t "Error: ~A does not name a function.~%" func-symbol))))
+
+;; Example execute-tool
+(defun execute-tool (tool-name parameters)
+  "Example of tool execution. Replace with actual tool logic."
+  (format t "~%Executing tool ~A with params ~A~%" tool-name parameters)
+  (cond
+    ((equal tool-name 'TOOL-SEARCH-WEB)
+        (format t "~%Performing Web search for ~A~%" (first parameters))
+        (format nil "Search results for: ~A" (first parameters)) )
+    (t
+      (format nil "Unknown tool: ~A" tool-name)
+    )))
 
 
 ;; --- Concrete Agent Example using Gemini and tavily ---

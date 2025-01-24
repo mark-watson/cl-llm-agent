@@ -14,18 +14,18 @@
   (and (probe-file pathname)
        (directory-pathname-p pathname)))
 
-(defmacro define-tool (name description parameters &body body)
+(defmacro define-tool (name description parameters parameter-example a-function)
   "Defines a tool with a name, description, parameters, and implementation."
   `(register-tool ',name
                   :description ,description
                   :parameters ',parameters
-                  :function (lambda ,parameters
-                              ,@body)))
+                  :parameter-example ,parameter-example
+                  :function ,a-function))
 
-(defun register-tool (name &key description parameters function)
+(defun register-tool (name &key description parameters parameter-example function)
   "Registers a tool in the tool registry."
   (setf (gethash name *tool-registry*)
-        (list :name name :description description :parameters parameters :function function)))
+        (list :name name :description description :parameters parameters :parameter-example parameter-example :function function)))
 
 (defun execute-tool (tool-name arguments)
   "Executes a registered tool with the given arguments."
@@ -45,7 +45,8 @@
   "Returns a list of registered tool names and descriptions."
   (loop for tool-data being the hash-value of *tool-registry*
         collect (list :name (getf tool-data :name)
-                      :description (getf tool-data :description))))
+                      :description (getf tool-data :description)
+                      :function (getf tool-data :function))))
 
 
 ;; --- Predefined Tools ---
@@ -53,24 +54,23 @@
 (define-tool tool-read-directory "Reads the contents of a directory."
   (directory-path)
   "directory-path (string): The path to the directory."
-  (let ((dir-path (namestring (truename directory-path)))) ; Ensure absolute path
-    (if (probe-directory dir-path)
-        (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
-        (format nil "Directory not found: ~A" directory-path))))
+  (lambda (directory-path)
+    (let ((dir-path (namestring (truename directory-path)))) ; Ensure absolute path
+      (if (probe-directory dir-path)
+          (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
+        (format nil "Directory not found: ~A" directory-path)))))
 
 (define-tool tool-read-file "Reads the contents of a file."
   (file-path)
   "file-path (string): The path to the file."
-  (let ((file-path (namestring (truename file-path)))) ; Ensure absolute path
-    (if (probe-file file-path)
-        (with-open-file (stream file-path :direction :input :if-does-not-exist nil)
-          (when stream
-            (loop for line = (read-line stream nil nil)
-                  while line
-                  collect line)))
-        (format nil "File not found: ~A" file-path))))
+  (lambda (directory-path)
+    (let ((dir-path (namestring (truename directory-path))))
+      (if (probe-directory dir-path)
+          (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
+        (format nil "Directory not found: ~A" directory-path)))))
 
 (define-tool tool-search-web "Search the web."
   (query)
   "query: web search query."
-  (cl-llm-agent-tavily:tavily-search query))
+  (lambda (query)
+    (cl-llm-agent-tavily:tavily-search query)))
