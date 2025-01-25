@@ -2,7 +2,8 @@
   (:use :cl)
   (:export :http-post-json
            :parse-json
-           :dexador))
+           :dexador
+           ::pp-hash))
 
 (defpackage :cl-llm-agent-gemini
   (:use :cl :cl-llm-agent-utils)

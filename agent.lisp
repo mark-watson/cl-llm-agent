@@ -1,15 +1,5 @@
 (in-package :cl-llm-agent)
 
-(defun pp-hash (message h)
-  "Prints a message followed by the contents of a hash table."
-  (format t "~A~%" message)
-  (when (hash-table-p h)
-    (loop for key being the hash-key of h
-          using (hash-value value)
-          do (format t "  ~A: ~A~%" key value)))
-  (unless (hash-table-p h)
-    (format t "  Not a hash table: ~A~%" h)))
-
 (defclass context ()
   ((data :initform (make-hash-table :test #'equal)
          :accessor context-data))
@@ -117,7 +107,7 @@
                     (let ((h (make-hash-table :test #'equal)))
                       (dolist (p parameters)
                         (setf (gethash (symbol-name (car p)) h) (cdr p)))
-                      (pp-hash "* function call params" h)
+                      (cl-llm-agent-utils:pp-hash "* function call params" h)
                       (format t "~%Tool Requested: ~A with parameters hashtable: ~S~%" action-name h)
                       (let ((tool-result
                              (execute-tool action-name
