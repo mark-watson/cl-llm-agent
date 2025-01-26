@@ -79,21 +79,21 @@
     (helper-tool-read-directory directory-path)))
 
 
-(defun helper-tool-read-file (directory-path)
-  (let ((dir-path (or directory-path ".")))
-    (format t "* helper-tool-read-file in directory ~A~%" dir-path)
-    (let ((dir-path-s (namestring (truename dir-path))))
-      (format t "    dir-path = ~A~%" dir-path-s)
-      (if (probe-directory dir-path-s)
-          (mapcar #'namestring (directory (concatenate 'string dir-path-s "/*.*")))
-        (format nil "Directory not found: ~A" dir-path-s)))))
-
+(defun helper-tool-read-file (file-path)
+   (if (probe-file file-path)
+      (with-open-file (stream file-path :direction :input)
+        (with-output-to-string (out)
+          (loop for line = (read-line stream nil)
+                while line do
+                  (write-line line out))))
+      "file not found"))
+      
 (define-tool "tool-read-file" "Reads the contents of a file."
   (file-path)
   "file-path (string): The path to the file."
-  (lambda (directory-path)
-    (format t "* tool-read-file in directory ~A~%" dir-path)
-    (helper-tool-read-file directory-path)))
+  (lambda (file-path)
+    (format t "* tool-read-file in path ~A~%" file-path)
+    (helper-tool-read-file file-path)))
 
 
 (define-tool "tool-search-web" "Search the web."
@@ -102,3 +102,18 @@
   (lambda (query)
     (format t "* tool-search-web query: ~A~%" query)
     (cl-llm-agent-tavily:tavily-search query)))
+
+(defun helper-tool-summarize (text)
+  (let* ((prompt
+           (format nil "Summarize the following text, and be concise and accurate:~%~%~A~%" text))
+         (summary (cl-llm-agent-gemini:gemini-generate-content prompt)))
+    (format t "* helper-tool-summarize: generated summary is:~%~%~A~%" summary)
+    summary))
+
+
+(define-tool "tool-summarize" "Summarize text."
+  (text)
+  "text: text to summarize."
+  (lambda (text)
+    (format t "* tool-summarize text: ~A~%" text)
+    (helper-tool-summarize text)))

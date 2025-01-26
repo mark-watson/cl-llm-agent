@@ -29,5 +29,8 @@
 ;; Next conversation turn - the agent can use the updated context
 ;(cl-llm-agent:agent-converse my-agent "Now refine the restaurant search to Italian cuisine.")
 
-(cl-llm-agent:agent-converse my-agent "What Lisp source files are in the current directory?")
+;;(cl-llm-agent:agent-converse my-agent "What Lisp source files are in the current directory?")
  
+;;(cl-llm-agent:agent-converse my-agent "Read the file 'README.md' in the current directory.")
+
+(cl-llm-agent:agent-converse my-agent "Read the file 'README.md' in the current directory and summarizee the text in the file.")
