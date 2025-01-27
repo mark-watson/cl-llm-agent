@@ -34,3 +34,5 @@
 ;;(cl-llm-agent:agent-converse my-agent "Read the file 'README.md' in the current directory.")
 
 ;;(cl-llm-agent:agent-converse my-agent "Read the file 'test.txt' in the current directory and summarize the text in the file.")
+
+(cl-llm-agent:agent-converse my-agent "Search the web to find information on AI advancements and then summarize the search results.")
