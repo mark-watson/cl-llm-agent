@@ -15,7 +15,7 @@
 (cl-llm-agent:display-context *context* "Context fetched from agent")
 (cl-llm-agent:display-context my-context "Original context")
 
-;(cl-llm-agent:agent-converse my-agent "Search the web to find information on AI advancements.")
+(cl-llm-agent:agent-converse my-agent "Search the web to find information on AI advancements.")
 
 ;; Agent interaction - the agent can now access and modify its context
 ;(cl-llm-agent:agent-converse my-agent "Find restaurants based on my current task and location stored in the context.")
@@ -33,4 +33,4 @@
  
 ;;(cl-llm-agent:agent-converse my-agent "Read the file 'README.md' in the current directory.")
 
-(cl-llm-agent:agent-converse my-agent "Read the file 'test.txt' in the current directory and summarize the text in the file.")
+;;(cl-llm-agent:agent-converse my-agent "Read the file 'test.txt' in the current directory and summarize the text in the file.")

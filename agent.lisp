@@ -82,7 +82,7 @@
         (subseq trimmed-text start-pos (1+ end-pos))
         text))) ;; Return original if no JSON found.
 
-(defmethod agent-converse ((agent base-agent) user-input)
+(defmethod XXXXXXXXXagent-converse ((agent base-agent) user-input)
   "Handles a conversation turn with the agent."
   (format t "&* * agent-converse: ~A~%" user-input)
   ;; for debug, print out the agent's current context:
@@ -124,15 +124,50 @@
                   ))))
 
     ))
-        ;;(error (e)
-        ;;  ;; Not a JSON tool request, treat as natural language response and ignore JSON parsing error
-        ;;  (print e)
-       ;;   ))))
+ 
+ (defmethod agent-converse ((agent base-agent) user-input)
+  "Handles a conversation turn with the agent."
+  (format t "&* * agent-converse: ~A~%" user-input)
+  (display-context (cl-llm-agent:agent-context agent) "Context at start of agent-converse call")
 
+  (let* ((tool-descriptions (list-tools))
+         (tool-prompt (make-prompt-string))
+         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond ONLY in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\"}} or for multiple sequential tools: {\"actions\": [{\"action\": \"tool_name1\", \"parameters\": {\"param1\": \"value1\"}}, {\"action\": \"tool_name2\", \"parameters\": {\"param1\": \"PREV_RESULT\"}}]}. Use PREV_RESULT to indicate where the previous tool's output should be used. If you don't need a tool, just respond naturally." tool-prompt user-input))
+         (llm-response (agent-llm-call agent prompt))
+         (cleaned-response (remove-json-markdown llm-response)))
+
+    (format t "~%LLM Response: ~A~%" llm-response)
+    (format t "~%Cleaned LLM Response: ~A~%" cleaned-response)
+
+    (let ((action-request (cl-llm-agent-utils:parse-json cleaned-response)))
+      (format t "* agent-converse: action-request = ~A~%" action-request)
+      (if (listp action-request)
+          (let ((actions (if (assoc :ACTIONS action-request :test #'equal)
+                             (cdr (assoc :ACTIONS action-request :test #'equal))
+                             (list action-request))))
+            (let ((prev-result nil))
+              (loop for action in actions
+                    do (let* ((action-name (cdr (assoc :ACTION action :test #'equal)))
+                              (parameters (cdr (assoc :PARAMETERS action :test #'equal)))
+                              (param-values (loop for (param-name . param-value) in parameters
+						  collect (if (string= param-value "PREV_RESULT")
+                                                              prev-result
+                                                              param-value))))
+                         (setf prev-result 
+                               (execute-tool action-name param-values))))
+              (format nil "Tools executed. Final result: ~A" prev-result)))
+          (format nil "Agent response: ~A" cleaned-response)))))
 
 (defun get-tool-function (tool-name)
   "Retrieves the function associated with a given tool name."
-  (let ((tool-entry (find tool-name (cl-llm-agent::list-tools) :key (lambda (entry) (getf entry :name)) :test #'string=)))
+  (format t "* get-tool-function DEBUG: tool-name: |~A|~%" tool-name)
+  (format t "* get-tool-function DEBUG: (cl-llm-agent::list-tools): ~A~%" (cl-llm-agent::list-tools))
+  (let ((tool-entry
+	  (or
+	   (find tool-name (cl-llm-agent::list-tools) :key (lambda (entry) (getf entry :name)) :test #'string=)
+	   (find (substitute #\- #\_ tool-name)
+		 (cl-llm-agent::list-tools) :key (lambda (entry) (getf entry :name)) :test #'string=))))
+    (format t "* get-tool-function DEBUG: tool-entry: ~A~%" tool-entry)
     (if tool-entry
         (getf tool-entry :function)
         nil)))
