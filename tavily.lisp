@@ -38,14 +38,8 @@
         (let ((response-str (dex:post api-url
                                       :headers '(("Content-Type" . "application/json"))
                                       :content prompt-data)))
-          ;;(print "**********")
-          ;;(pprint response-str)
-          ;;(print "----------")
-          (let ((response-json (parse-json response-str)))
-            ;;(print "**********json**")
-            ;;(pprint response-json)
-            ;;(print "----------json--")
-            (if (getf response-json :error) ; Check for error using getf (like original)
+           (let ((response-json (parse-json response-str)))
+             (if (getf response-json :error) ; Check for error using getf (like original)
                 (error "Tavily API Error: ~A" (getf response-json :error))
               ;; Process and return search results, using hash-table access and mapcar
               (let ((uri-title-content-list
@@ -55,9 +49,4 @@
       (error (c)
         (error "Error communicating with Tavily API: ~A" c)))))
 
-
-;; Example usage (for testing - remove or comment out in library)
-;; (comment
-;;   (setf cl-llm-agent-tavily:*tavily-api-key* "YOUR_TAVILY_API_KEY") ; Or set env var TAVILY_API_KEY
-;;   (pprint (cl-llm-agent-tavily:tavily-search "Fun things to do in Sedona Arizona")))
-;; )
+;; (cl-llm-agent-tavily:tavily-search "Fun things to do in Sedona Arizona")

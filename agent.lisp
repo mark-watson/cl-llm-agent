@@ -32,10 +32,9 @@
   (let ((data (context-data context)))
     (if (hash-table-p data)
         (loop for key being the hash-key of data
-              using (hash-value value)
+		using (hash-value value)
               do (format t "  ~A: ~A~%" key value))
         (format t "  Invalid context object~%"))))
-
 
 (defmacro define-agent (agent-name &body body)
   "Defines a new agent type."
@@ -46,7 +45,7 @@
             rest-body (rest body)))     ; Remove :bases form from body
 
     `(defclass ,agent-name ,bases  ; Place superclasses correctly
-      ,@rest-body)))           ; Place the rest of the body (options and slots)
+       ,@rest-body)))           ; Place the rest of the body (options and slots)
 
 
 (defclass base-agent ()
@@ -60,7 +59,6 @@
   (unless (slot-boundp agent 'context)
     (setf (slot-value agent 'context) (make-context))))
 
-;; Remove or comment out the old make-agent function that uses case
 (defun make-agent (agent-type &rest initargs &key context)
   "Creates an instance of an agent type."
   (apply #'make-instance agent-type (append (list :context context) initargs)))
@@ -82,50 +80,8 @@
         (subseq trimmed-text start-pos (1+ end-pos))
         text))) ;; Return original if no JSON found.
 
-(defmethod XXXXXXXXXagent-converse ((agent base-agent) user-input)
-  "Handles a conversation turn with the agent."
-  (format t "&* * agent-converse: ~A~%" user-input)
-  ;; for debug, print out the agent's current context:
-  (display-context (cl-llm-agent:agent-context agent) "Context at start of agent-converse call")
 
-  (let* ((tool-descriptions (list-tools))
-         (tool-prompt (make-prompt-string))
-         (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond ONLY in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}. If you don't need a tool, just respond naturally. Do not include markdown formatting for JSON output! An example of JSON output: {\"action\": \"search_restaurant\", \"parameters\": {\"cuisine\": \"Italian\", \"location\": \"London\"}}.  If you require more information, then respond naturally" tool-prompt user-input))
-         (llm-response (agent-llm-call agent prompt))
-         (cleaned-response (remove-json-markdown llm-response)))
-
-    (format t "~%LLM Response: ~A~%" llm-response)
-    (format t "~%Cleaned LLM Response: ~A~%" cleaned-response)
-
-    ;;(handler-case
-        (let ((action-request (cl-llm-agent-utils:parse-json cleaned-response)))
-          (format t "* agent-converse: action-request = ~A~%" action-request)
-         (if (listp action-request)
-              (let ((action-name (cdr (assoc :ACTION action-request :test #'equal)))
-                    (parameters (cdr (assoc :PARAMETERS action-request :test #'equal))))
-                (if (listp parameters)
-                    (let ((h (make-hash-table :test #'equal)))
-                      (dolist (p parameters)
-                        (setf (gethash (symbol-name (car p)) h) (cdr p)))
-                      (cl-llm-agent-utils:pp-hash "* function call params" h)
-                      (format t "~%Tool Requested: ~A with parameters hashtable: ~S~%" action-name h)
-                      (let ((tool-result
-                             (execute-tool action-name
-                                           (if (listp parameters)
-                                               (loop for (param-name . param-value) in parameters
-                                                     collect param-value)
-                                             (list parameters))))) ; If parameters are a list of pairs, get the values, otherwise, treat parameters as a single value
-                        (format t "~%Tool Result: ~A~%" tool-result)
-                        (format nil "Tool '~A' executed. Result: ~A" action-name tool-result)
-                        ))
-
-                  ;; No tool requested, return LLM response directly
-                  (format nil "Agent response: ~A" cleaned-response)  ;; Return original response
-                  ))))
-
-    ))
- 
- (defmethod agent-converse ((agent base-agent) user-input)
+(defmethod agent-converse ((agent base-agent) user-input)
   "Handles a conversation turn with the agent."
   (format t "&* * agent-converse: ~A~%" user-input)
   (display-context (cl-llm-agent:agent-context agent) "Context at start of agent-converse call")
@@ -160,14 +116,11 @@
 
 (defun get-tool-function (tool-name)
   "Retrieves the function associated with a given tool name."
-  (format t "* get-tool-function DEBUG: tool-name: |~A|~%" tool-name)
-  (format t "* get-tool-function DEBUG: (cl-llm-agent::list-tools): ~A~%" (cl-llm-agent::list-tools))
   (let ((tool-entry
 	  (or
 	   (find tool-name (cl-llm-agent::list-tools) :key (lambda (entry) (getf entry :name)) :test #'string=)
 	   (find (substitute #\- #\_ tool-name)
 		 (cl-llm-agent::list-tools) :key (lambda (entry) (getf entry :name)) :test #'string=))))
-    (format t "* get-tool-function DEBUG: tool-entry: ~A~%" tool-entry)
     (if tool-entry
         (getf tool-entry :function)
         nil)))
@@ -182,13 +135,13 @@
         (let()
           (format t "~%Found tool function, calling it...parameters = ~A~%" parameters)
           (princ (apply tool-function parameters)))
-      (format nil "Unknown tool: ~A" tool-name))))
+	(format nil "Unknown tool: ~A" tool-name))))
 
 
 ;; --- Concrete Agent Example using Gemini and tavily ---
 
 (define-agent gemini-agent
-  (:bases (base-agent))
+    (:bases (base-agent))
   ())
 
 ;; Update the agent-llm-call function to use CLOS
@@ -196,4 +149,3 @@
   (if (typep agent 'gemini-agent)
       (gemini-generate-content prompt)
       (error "LLM call not implemented for this agent type")))
-

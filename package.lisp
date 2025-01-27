@@ -34,15 +34,11 @@
            :make-agent
            :agent-converse
            :register-tool
-           ;;:agent-register-tool
            :agent-tools
            :agent-llm-call
            :agent-search
-           ;;
-           :make-context        ; Export make-context function
-           ;;:context-set         ; Export context-set generic function
-           :context-data         ; Export context-get generic function
+           :make-context
+           :context-data
            :context-remove
            :display-context
-           :agent-context))    ; Export context-remove generic function
-
+           :agent-context))

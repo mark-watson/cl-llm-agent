@@ -50,7 +50,6 @@
                       :description (getf tool-data :description)
                       :function (getf tool-data :function))))
 
-
 ;; --- Predefined Tools ---
 
 (defun helper-tool-read-directory (directory-path)
@@ -109,7 +108,6 @@
          (summary (cl-llm-agent-gemini:gemini-generate-content prompt)))
     (format t "* helper-tool-summarize: generated summary is:~%~%~A~%" summary)
     summary))
-
 
 (define-tool "tool-summarize" "Summarize text."
   (text)
