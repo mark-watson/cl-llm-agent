@@ -1,4 +1,10 @@
-;;(ql:quickload :cl-llm-agent)
+(ql:quickload :cl-llm-agent)
+(when (member :sbcl *features*) ;; trying to fix problems with SBCL
+  (progn
+    (load "package.lisp")
+    (load "agent.lisp")))
+
+;;(in-package :cl-llm-agent)
 
 ;; Create a context object
 (defvar my-context (cl-llm-agent:make-context))
