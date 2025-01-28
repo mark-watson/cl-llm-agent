@@ -26,13 +26,13 @@
 
 (defun tavily-search (query &key (api-key *tavily-api-key*))
   "Performs a search using the Tavily Search API."
-  (format t "~%* Calling tavily-search with qery: ~A~%" query)
-  (let* ((api-key-to-use (or api-key (uiop:getenv "TAVILY_API_KEY"))) ; Get API key, prioritize arg then env
+  (format t "~%* Calling tavily-search with query: ~A~%" query)
+  (let* ((api-key-to-use (or api-key (uiop:getenv "TAVILY_API_KEY")))
          (api-url *tavily-api-url*)
          (prompt-data (make-tavily-json-payload query)))
 
     (unless api-key-to-use
-      (error "Tavily API key is not set. Set cl-llm-agent-tavily:*tavily-api-key* or TAVILY_API_KEY environment variable."))
+      (error "Tavily API key is not set."))
 
     (handler-case
         (let ((response-str (dex:post api-url
