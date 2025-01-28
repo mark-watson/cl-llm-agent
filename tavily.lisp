@@ -18,14 +18,14 @@
          :|max_results| 5)))
 
 (defun filter-tavily-response-item (result)
-  "Helper function to filter Tavily API response item, mirroring Racket's filter-response."
+  "Helper function to filter Tavily API response item."
   ;;(format t "** result: ~A~%" result)
   (list (cdr (nth 0 result))
         (cdr (nth 1 result))
         (cdr (nth 2 result))))
 
 (defun tavily-search (query &key (api-key *tavily-api-key*))
-  "Performs a search using the Tavily Search API, rewritten from Racket."
+  "Performs a search using the Tavily Search API."
   (format t "~%* Calling tavily-search with qery: ~A~%" query)
   (let* ((api-key-to-use (or api-key (uiop:getenv "TAVILY_API_KEY"))) ; Get API key, prioritize arg then env
          (api-url *tavily-api-url*)
