@@ -11,9 +11,9 @@
   (octets-to-string bytes :encoding :utf-8))
 
 (defun make-tavily-json-payload (query)
-  "Helper function to create JSON payload for Tavily API request, mirroring Racket's json-helper."
+  "Helper function to create JSON payload for Tavily API request."
   (jonathan:to-json 
-   (list :|api_key| (or *tavily-api-key* (uiop:getenv "TAVILY_API_KEY")) ; Prioritize variable, then env var
+   (list :|api_key| (or *tavily-api-key* (uiop:getenv "TAVILY_API_KEY"))
          :|query| query
          :|max_results| 5)))
 

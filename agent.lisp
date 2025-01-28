@@ -107,8 +107,8 @@
                               (parameters (cdr (assoc :PARAMETERS action :test #'equal)))
                               (param-values (loop for (param-name . param-value) in parameters
 						  collect (if (string= param-value "PREV_RESULT")
-                                                              prev-result
-                                                              param-value))))
+                                prev-result
+                                param-value))))
                          (setf prev-result 
                                (execute-tool action-name param-values))))
               (format nil "Tools executed. Final result: ~A" prev-result)))
