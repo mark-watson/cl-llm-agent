@@ -1,4 +1,3 @@
-(ql:quickload :cl-llm-agent)
 (when (member :sbcl *features*) ;; trying to fix problems with SBCL
   (progn
     (load "package.lisp")

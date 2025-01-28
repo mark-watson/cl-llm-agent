@@ -101,6 +101,7 @@
           (let ((actions (if (assoc :ACTIONS action-request :test #'equal)
                              (cdr (assoc :ACTIONS action-request :test #'equal))
                              (list action-request))))
+            (format t "~%debug: actions: ~A~%" actions)
             (let ((prev-result nil))
               (loop for action in actions
                     do (let* ((action-name (cdr (assoc :ACTION action :test #'equal)))
