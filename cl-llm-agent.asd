@@ -5,7 +5,8 @@
   :version "0.1.0"
   :serial t
   :depends-on (:drakma
-               :cl-json)
+               :cl-json
+               :babel)
   :components ((:file "package")
                (:file "utils")
                (:file "gemini" :depends-on (:utils))
