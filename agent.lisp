@@ -80,6 +80,7 @@
         (subseq trimmed-text start-pos (1+ end-pos))
         text))) ;; Return original if no JSON found.
 
+(defvar *x* nil)
 
 (defmethod agent-converse ((agent base-agent) user-input)
   "Handles a conversation turn with the agent."
@@ -91,25 +92,28 @@
          (prompt (format nil "~A~%User Input: ~A~%~%Assistant, you can use these tools if needed. If you want to use a tool, respond ONLY in a JSON format like: {\"action\": \"tool_name\", \"parameters\": {\"param1\": \"value1\"}} or for multiple sequential tools: {\"actions\": [{\"action\": \"tool_name1\", \"parameters\": {\"param1\": \"value1\"}}, {\"action\": \"tool_name2\", \"parameters\": {\"param1\": \"PREV_RESULT\"}}]}. Use PREV_RESULT to indicate where the previous tool's output should be used. If you don't need a tool, just respond naturally." tool-prompt user-input))
          (llm-response (agent-llm-call agent prompt))
          (cleaned-response (remove-json-markdown llm-response)))
-
+    
     (format t "~%LLM Response: ~A~%" llm-response)
     (format t "~%Cleaned LLM Response: ~A~%" cleaned-response)
-
+    
     (let ((action-request (cl-llm-agent-utils:parse-json cleaned-response)))
-      (format t "* agent-converse: action-request = ~A~%" action-request)
+      
+      (setf *x* action-request)
+      (format t "* agent-converse: action-request = ~S~%" action-request)
       (if (listp action-request)
-          (let ((actions (if (assoc :ACTIONS action-request :test #'equal)
-                             (cdr (assoc :ACTIONS action-request :test #'equal))
+          (let ((actions (if (getf action-request :|actions|)
+                             (getf action-request :|actions|)
                              (list action-request))))
             (format t "~%debug: actions: ~A~%" actions)
             (let ((prev-result nil))
               (loop for action in actions
-                    do (let* ((action-name (cdr (assoc :ACTION action :test #'equal)))
-                              (parameters (cdr (assoc :PARAMETERS action :test #'equal)))
-                              (param-values (loop for (param-name . param-value) in parameters
+                    do (let* ((action-name (getf action :|action|))
+                              (parameters (getf action :|parameters|))
+                              (ignore (format t "**** parameters=~S~%" parameters))
+                              (param-values (loop for (param-name param-value) on parameters by #'cddr
 						  collect (if (string= param-value "PREV_RESULT")
-                                prev-result
-                                param-value))))
+							      prev-result
+							      param-value))  ))
                          (setf prev-result 
                                (execute-tool action-name param-values))))
               (format nil "Tools executed. Final result: ~A" prev-result)))

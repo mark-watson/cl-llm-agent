@@ -1,5 +1,5 @@
 (defpackage :cl-llm-agent-utils
-  (:use :cl)
+  (:use :cl :cl-json)
   (:export #:http-post-json
            #:parse-json
            #:dexador

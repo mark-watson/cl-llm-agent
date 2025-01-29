@@ -2,6 +2,7 @@
 
 (defun parse-json (json-string)
   "Parses a JSON string into a Lisp data structure."
+  (json:set-decoder-simple-list-semantics) ;; required for returning plist
   (cl-json:decode-json-from-string json-string))
 
 (defun pp-hash (message h)
