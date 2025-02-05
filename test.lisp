@@ -11,7 +11,7 @@
 (defvar my-agent (cl-llm-agent:make-agent 'cl-llm-agent::gemini-agent
                                           :context my-context))
 
-;(cl-llm-agent:agent-converse my-agent "Search the web to find information on AI advancements.")
+(cl-llm-agent:agent-converse my-agent "Search the web to find information on AI advancements.")
 
 ;; Agent interaction - the agent can now access and modify its context
 ;(cl-llm-agent:agent-converse my-agent "Find restaurants based on my current task and location stored in the context.")
@@ -25,5 +25,5 @@
 ;; Next conversation turn - the agent can use the updated context
 ;(cl-llm-agent:agent-converse my-agent "Now refine the restaurant search to Italian cuisine.")
 
-(cl-llm-agent:agent-converse my-agent "What Lisp source files are in the current directory?")
+;cl-llm-agent:agent-converse my-agent "What Lisp source files are in the current directory?")
  
