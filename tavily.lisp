@@ -11,41 +11,35 @@
   (octets-to-string bytes :encoding :utf-8))
 
 (defun make-tavily-json-payload (query)
-  "Helper function to create JSON payload for Tavily API request, mirroring Racket's json-helper."
+  "Helper function to create JSON payload for Tavily API request."
   (jonathan:to-json 
-   (list :|api_key| (or *tavily-api-key* (uiop:getenv "TAVILY_API_KEY")) ; Prioritize variable, then env var
+   (list :|api_key| (or *tavily-api-key* (uiop:getenv "TAVILY_API_KEY"))
          :|query| query
          :|max_results| 5)))
 
 (defun filter-tavily-response-item (result)
-  "Helper function to filter Tavily API response item, mirroring Racket's filter-response."
+  "Helper function to filter Tavily API response item."
   ;;(format t "** result: ~A~%" result)
   (list (cdr (nth 0 result))
         (cdr (nth 1 result))
         (cdr (nth 2 result))))
 
 (defun tavily-search (query &key (api-key *tavily-api-key*))
-  "Performs a search using the Tavily Search API, rewritten from Racket."
-  (format t "~%* Calling tavily-search with qery: ~A~%" query)
-  (let* ((api-key-to-use (or api-key (uiop:getenv "TAVILY_API_KEY"))) ; Get API key, prioritize arg then env
+  "Performs a search using the Tavily Search API."
+  (format t "~%* Calling tavily-search with query: ~A~%" query)
+  (let* ((api-key-to-use (or api-key (uiop:getenv "TAVILY_API_KEY")))
          (api-url *tavily-api-url*)
          (prompt-data (make-tavily-json-payload query)))
 
     (unless api-key-to-use
-      (error "Tavily API key is not set. Set cl-llm-agent-tavily:*tavily-api-key* or TAVILY_API_KEY environment variable."))
+      (error "Tavily API key is not set."))
 
     (handler-case
         (let ((response-str (dex:post api-url
                                       :headers '(("Content-Type" . "application/json"))
                                       :content prompt-data)))
-          ;;(print "**********")
-          ;;(pprint response-str)
-          ;;(print "----------")
-          (let ((response-json (parse-json response-str)))
-            ;;(print "**********json**")
-            ;;(pprint response-json)
-            ;;(print "----------json--")
-            (if (getf response-json :error) ; Check for error using getf (like original)
+           (let ((response-json (parse-json response-str)))
+             (if (getf response-json :error) ; Check for error using getf (like original)
                 (error "Tavily API Error: ~A" (getf response-json :error))
               ;; Process and return search results, using hash-table access and mapcar
               (let ((uri-title-content-list
@@ -55,9 +49,4 @@
       (error (c)
         (error "Error communicating with Tavily API: ~A" c)))))
 
-
-;; Example usage (for testing - remove or comment out in library)
-;; (comment
-;;   (setf cl-llm-agent-tavily:*tavily-api-key* "YOUR_TAVILY_API_KEY") ; Or set env var TAVILY_API_KEY
-;;   (pprint (cl-llm-agent-tavily:tavily-search "Fun things to do in Sedona Arizona")))
-;; )
+;; (cl-llm-agent-tavily:tavily-search "Fun things to do in Sedona Arizona")

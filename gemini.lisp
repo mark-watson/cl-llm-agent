@@ -14,7 +14,9 @@
 (defvar *gemini-api-key* (uiop:getenv "GOOGLE_API_KEY")
   "Your Google Gemini API key. Set this before using Gemini functions.")
 
-(defvar *gemini-base-url* "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+(defvar
+  *gemini-base-url*
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
   "Base URL for Gemini API.")
 
 ;; Define the conversion function using the imported babel function directly

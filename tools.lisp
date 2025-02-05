@@ -25,7 +25,8 @@
 (defun register-tool (name &key description parameters parameter-example function)
   "Registers a tool in the tool registry."
   (setf (gethash name *tool-registry*)
-        (list :name name :description description :parameters parameters :parameter-example parameter-example :function function)))
+        (list :name name :description description :parameters parameters
+	      :parameter-example parameter-example :function function)))
 
 (defun execute-tool (tool-name arguments)
   "Executes a registered tool with the given arguments."
@@ -49,39 +50,49 @@
                       :description (getf tool-data :description)
                       :function (getf tool-data :function))))
 
-
 ;; --- Predefined Tools ---
 
 (defun helper-tool-read-directory (directory-path)
-  (format t "* helper-tool-read-directory ~A~%" dir-path)
-  (let ((dir-path (namestring (truename directory-path)))) ; Ensure absolute path
-    (if (probe-directory dir-path)
-        (mapcar #'namestring (directory (concatenate 'string dir-path "/*.*")))
-      (format nil "Directory not found: ~A" directory-path))))
+  (format t "* helper-tool-read-directory ~A~%" directory-path)
+  (let ((dp (or directory-path ".")))
+    (let ((dir-path (truename dp))) ; Ensure absolute path
+      (format t "  dir-path = ~A~%" dir-path)
+      (if (probe-directory dir-path)
+	  (let ((flist
+		  (remove-if 
+		   (lambda (path)
+		     (let ((name (file-namestring path)))
+		       (or (char= (char name 0) #\#)         ; starts with #
+			   (char= (char (reverse name) 0) #\~)))) ; ends with ~
+		   (mapcar #'file-namestring
+			   (uiop:directory-files dir-path)))))
+	    (print flist)
+            (mapcar #'namestring flist))
+	  (format nil "Directory not found: ~A" dir-path)))))
 
 (define-tool "tool-read-directory" "Reads the contents of a directory."
   (directory-path)
   "directory-path (string): The path to the directory."
-  (lambda (directory-path)
-    (format t "* tool-read-directory ~A~%" dir-path)
+  (lambda (&aux directory-path)
+    (format t "* tool-read-directory ~A~%" directory-path)
     (helper-tool-read-directory directory-path)))
 
 
-(defun helper-tool-read-file (directory-path)
-  (let ((dir-path (or directory-path ".")))
-    (format t "* helper-tool-read-file in directory ~A~%" dir-path)
-    (let ((dir-path-s (namestring (truename dir-path))))
-      (format t "    dir-path = ~A~%" dir-path-s)
-      (if (probe-directory dir-path-s)
-          (mapcar #'namestring (directory (concatenate 'string dir-path-s "/*.*")))
-        (format nil "Directory not found: ~A" dir-path-s)))))
-
+(defun helper-tool-read-file (file-path)
+   (if (probe-file file-path)
+      (with-open-file (stream file-path :direction :input)
+        (with-output-to-string (out)
+          (loop for line = (read-line stream nil)
+                while line do
+                  (write-line line out))))
+      "file not found"))
+      
 (define-tool "tool-read-file" "Reads the contents of a file."
   (file-path)
   "file-path (string): The path to the file."
-  (lambda (directory-path)
-    (format t "* tool-read-file in directory ~A~%" dir-path)
-    (helper-tool-read-file directory-path)))
+  (lambda (file-path)
+    (format t "* tool-read-file in path ~A~%" file-path)
+    (helper-tool-read-file file-path)))
 
 
 (define-tool "tool-search-web" "Search the web."
@@ -90,3 +101,17 @@
   (lambda (query)
     (format t "* tool-search-web query: ~A~%" query)
     (cl-llm-agent-tavily:tavily-search query)))
+
+(defun helper-tool-summarize (text)
+  (let* ((prompt
+           (format nil "Summarize the following text, and be concise and accurate:~%~%~A~%" text))
+         (summary (cl-llm-agent-gemini:gemini-generate-content prompt)))
+    (format t "* helper-tool-summarize: generated summary is:~%~%~A~%" summary)
+    summary))
+
+(define-tool "tool-summarize" "Summarize text."
+  (text)
+  "text: text to summarize."
+  (lambda (text)
+    (format t "* tool-summarize text: ~A~%" text)
+    (helper-tool-summarize text)))
