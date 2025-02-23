@@ -4,9 +4,9 @@
   :license "Apache 2"
   :version "0.1.0"
   :serial t
-  :depends-on (:drakma
-               :cl-json
-               :babel :gemini :tavily)
+  :depends-on (:cl-json
+               :gemini
+               :tavily)
   :components ((:file "package")
                (:file "agent")))
 
