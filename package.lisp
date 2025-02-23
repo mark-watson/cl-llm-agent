@@ -1,5 +1,5 @@
 (defpackage :cl-llm-agent
-  (:use :cl)
+  (:use :cl :tavily :gemini)
   (:export #:define-agent
            #:make-agent
            #:agent-converse

@@ -1,7 +1,7 @@
-(when (member :sbcl *features*) ;; trying to fix problems with SBCL
-  (progn
-    (load "package.lisp")
-    (load "agent.lisp")))
+;(when (member :sbcl *features*) ;; trying to fix problems with SBCL
+;  (progn
+;    (load "package.lisp")
+;    (load "agent.lisp")))
 
 ;;(in-package :cl-llm-agent)
 
