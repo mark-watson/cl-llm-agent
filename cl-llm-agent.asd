@@ -6,10 +6,11 @@
   :serial t
   :depends-on (:drakma
                :cl-json
-               :babel)
+               :babel :gemini :tavily)
   :components ((:file "package")
-               (:file "utils")
-               (:file "gemini" :depends-on (:utils))
-               (:file "tavily" :depends-on (:utils))
-               (:file "tools" :depends-on (:utils))
-               (:file "agent" :depends-on (:gemini :tavily :tools :utils))))
+               ;;(:file "utils")
+               ;;(:file "gemini" :depends-on (:utils))
+               ;;(:file "tavily" :depends-on (:utils))
+               ;;(:file "tools")
+               (:file "agent")))
+
