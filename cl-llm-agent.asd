@@ -8,9 +8,5 @@
                :cl-json
                :babel :gemini :tavily)
   :components ((:file "package")
-               ;;(:file "utils")
-               ;;(:file "gemini" :depends-on (:utils))
-               ;;(:file "tavily" :depends-on (:utils))
-               ;;(:file "tools")
                (:file "agent")))
 

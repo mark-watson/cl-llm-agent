@@ -260,7 +260,7 @@
   "file-path (string): The path to the file."
   (lambda (file-path)
     (format t "* tool-read-file in path ~A~%" file-path)
-    (helper-tool-read-file file-path)))
+    (print (helper-tool-read-file file-path))))
 
 
 (define-tool "tool-search-web" "Search the web."
@@ -268,7 +268,7 @@
   "query: web search query."
   (lambda (query)
     (format t "* tool-search-web query: ~A~%" query)
-    (tavily:websearch query)))
+    (print (tavily:websearch query))))
 
 (defun helper-tool-summarize (text)
   (let* ((prompt
