@@ -1,12 +1,15 @@
-(asdf:defsystem cl-llm-agent
-  :description "Common Lisp library for LLM agent platform"
-  :author "Mark Watson"
-  :license "Apache 2"
-  :version "0.1.0"
-  :serial t
-  :depends-on (:cl-json
-               :gemini
-               :tavily)
-  :components ((:file "package")
-               (:file "agent")))
+;;; cl-llm-agent.asd -- ASDF system definition for cl-llm-agent
+(in-package #:asdf-user)
 
+(defsystem "cl-llm-agent"
+  :name "cl-llm-agent"
+  :version "0.1.0"
+  :author "Your Name <you@example.com>"
+  :license "MIT"
+  :description "A generic LLM-based agent framework for Common Lisp."
+  :depends-on ("cl-json" "gemini" "tavily" "uiop" "fiveam")
+  :components ((:file "package")
+               (:file "context")
+               (:file "agent-generic")
+               (:file "agent-gemini")
+               (:file "tools")))
