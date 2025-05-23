@@ -1,0 +1,9 @@
+{:paths ["." "tests"] ; Assuming .clj files are in root, and tests are in tests/
+
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        org.clojure/data.json {:mvn/version "2.4.0"}}
+
+ :aliases
+ {:test {:extra-paths ["tests"]
+         :extra-deps {org.clojure/test {:mvn/version "1.0.1"}} ; or a specific test runner
+         :main-opts ["-m" "clojure.main" "-e" "(require 'clj-llm-agent.tests) (clojure.test/run-tests 'clj-llm-agent.tests)"]}}}
