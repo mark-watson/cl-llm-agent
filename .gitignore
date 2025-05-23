@@ -28,3 +28,11 @@ __pycache__
 
 
 .codegpt
+
+# Clojure/Java specific
+target/
+*.jar
+*.class
+.cpcache/
+.nrepl-port
+pom.xml
